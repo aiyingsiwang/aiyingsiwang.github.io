@@ -155,9 +155,6 @@
 
     <h1>liuzixin</h1>
 
-    <p class="hint">
-        输入关键词，搜索内容。
-    </p>
 
     <input
         id="search"
@@ -317,35 +314,9 @@ async function copyText(text) {
 }
 
 
-function copyFirstResult() {
-
-    const results = getResults();
-
-    if (!results.length) {
-        return;
-    }
-
-    copyText(results[0].code);
-}
-
-
 search.addEventListener(
     "input",
     render
-);
-
-
-search.addEventListener(
-    "keydown",
-    event => {
-
-        if (event.key === "Enter") {
-
-            event.preventDefault();
-
-            copyFirstResult();
-        }
-    }
 );
 
 
