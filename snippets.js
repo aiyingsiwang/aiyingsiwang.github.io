@@ -1,88 +1,28 @@
 window.SNIPPETS = [
 
     {
-        id: "h",
+        id: "a",
 
-        title: "Python 临时 HTTP 文件服务器",
-
-        keywords: [
-            "python",
-            "http",
-            "server",
-            "8000",
-            "文件服务器",
-            "网页服务器"
-        ],
-
-        code: String.raw`python -m http.server 8000`
-    },
-
-
-    {
-        id: "dns",
-
-        title: "Windows 刷新 DNS",
+        title: "powershell脚本：用于读取当前文件夹架构",
 
         keywords: [
-            "windows",
-            "dns",
-            "网络",
-            "flushdns"
+            "powershell",
+            "java",
         ],
 
-        code: String.raw`ipconfig /flushdns`
-    },
+        code: '$output = "output.txt"
+"===== 目录树 =====" | Out-File $output -Encoding UTF8
+tree /f | Out-File $output -Encoding UTF8 -Append
 
+"`n===== 文件内容 =====" | Out-File $output -Encoding UTF8 -Append
 
-    {
-        id: "ip",
+Get-ChildItem -Recurse -File -Include *.java,*.xml | ForEach-Object {
+    "`n" + "="*50 | Out-File $output -Encoding UTF8 -Append
+    "文件路径: $($_.FullName)" | Out-File $output -Encoding UTF8 -Append
+    "="*50 | Out-File $output -Encoding UTF8 -Append
+    Get-Content $_.FullName -Encoding UTF8 -ErrorAction SilentlyContinue | Out-File $output -Encoding UTF8 -Append
+}
 
-        title: "Windows 查看网络配置",
-
-        keywords: [
-            "windows",
-            "ip",
-            "ipconfig",
-            "网络",
-            "网卡"
-        ],
-
-        code: String.raw`ipconfig /all`
-    },
-
-
-    {
-        id: "ping",
-
-        title: "测试网络连接",
-
-        keywords: [
-            "ping",
-            "网络",
-            "internet",
-            "8.8.8.8",
-            "测试"
-        ],
-
-        code: String.raw`ping 8.8.8.8`
-    },
-
-
-    {
-        id: "p8000",
-
-        title: "查看 8000 端口占用",
-
-        keywords: [
-            "port",
-            "8000",
-            "端口",
-            "netstat",
-            "pid",
-            "进程"
-        ],
-
-        code: String.raw`netstat -ano | findstr :8000`
+Write-Host "完成！已生成 $output"'
     }
-
 ];
