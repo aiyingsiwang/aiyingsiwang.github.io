@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="robots"
+        content="noindex,nofollow"
+    >
+
+    <title>CodeBox</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            color-scheme: light dark;
+        }
+
+        body {
+            margin: 0;
+            font-family:
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+            background: Canvas;
+            color: CanvasText;
+        }
+
+        main {
+            width: min(900px, calc(100% - 28px));
+            margin: 40px auto;
+        }
+
+        h1 {
+            margin-bottom: 4px;
+            font-size: 32px;
+        }
+
+        .hint {
+            margin-top: 0;
+            opacity: 0.65;
+        }
+
+        #search {
+            width: 100%;
+            margin: 20px 0 10px;
+            padding: 15px 16px;
+            font-size: 18px;
+            border: 1px solid #8888;
+            border-radius: 10px;
+            background: Canvas;
+            color: CanvasText;
+            outline: none;
+        }
+
+        #search:focus {
+            border-color: CanvasText;
+        }
+
+        #status {
+            min-height: 28px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .item {
+            border: 1px solid #8886;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 14px 0;
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title {
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .id {
+            opacity: 0.55;
+            font-family: monospace;
+            margin-left: 6px;
+        }
+
+        pre {
+            margin: 14px 0 0;
+            padding: 15px;
+            overflow-x: auto;
+            border-radius: 8px;
+            background: #8882;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        code {
+            font-family:
+                Consolas,
+                Monaco,
+                "Courier New",
+                monospace;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 9px 16px;
+            border: 1px solid #8888;
+            border-radius: 8px;
+            background: Canvas;
+            color: CanvasText;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        button:hover {
+            background: #8882;
+        }
+
+        .empty {
+            text-align: center;
+            opacity: 0.6;
+            padding: 40px;
+        }
+
+        @media (max-width: 600px) {
+            main {
+                margin-top: 20px;
+            }
+
+            .top {
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main>
+
+    <h1>CodeBox</h1>
+
+    <p class="hint">
+        输入关键词。Enter 直接复制第一项。
+    </p>
+
+    <input
+        id="search"
+        type="search"
+        placeholder="搜索：http / dns / python / port..."
+        autocomplete="off"
+        autofocus
+    >
+
+    <div id="status"></div>
+
+    <div id="list"></div>
+
+</main>
+
+
+<script src="./snippets.js"></script>
+
+<script>
+
+const snippets =
+    Array.isArray(window.SNIPPETS)
+        ? window.SNIPPETS
+        : [];
+
+
+const search =
+    document.getElementById("search");
+
+const list =
+    document.getElementById("list");
+
+const status =
+    document.getElementById("status");
+
+
+function escapeHTML(text) {
+
+    return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+}
+
+
+function searchableText(item) {
+
+    return [
+        item.id,
+        item.title,
+        ...(item.keywords || []),
+        item.code
+    ]
+    .join(" ")
+    .toLowerCase();
+}
+
+
+function getResults() {
+
+    const q =
+        search.value
+            .trim()
+            .toLowerCase();
+
+    if (!q) {
+        return snippets;
+    }
+
+    return snippets.filter(
+        item =>
+            searchableText(item).includes(q)
+    );
+}
+
+
+function render() {
+
+    const results = getResults();
+
+    if (!results.length) {
+
+        list.innerHTML =
+            `<div class="empty">
+                没找到代码
+            </div>`;
+
+        return;
+    }
+
+    list.innerHTML =
+        results.map(item => `
+
+            <section class="item">
+
+                <div class="top">
+
+                    <div>
+
+                        <span class="title">
+                            ${escapeHTML(item.title)}
+                        </span>
+
+                        <span class="id">
+                            #${escapeHTML(item.id)}
+                        </span>
+
+                    </div>
+
+                    <button
+                        data-copy="${escapeHTML(item.id)}"
+                    >
+                        COPY
+                    </button>
+
+                </div>
+
+                <pre><code>${escapeHTML(item.code)}</code></pre>
+
+            </section>
+
+        `).join("");
+}
+
+
+async function copyText(text) {
+
+    try {
+
+        await navigator.clipboard.writeText(text);
+
+    } catch (error) {
+
+        const textarea =
+            document.createElement("textarea");
+
+        textarea.value = text;
+
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+
+        document.body.appendChild(textarea);
+
+        textarea.select();
+
+        document.execCommand("copy");
+
+        textarea.remove();
+    }
+
+    status.textContent =
+        "✓ 已复制";
+
+    setTimeout(
+        () => status.textContent = "",
+        1500
+    );
+}
+
+
+function copyFirstResult() {
+
+    const results = getResults();
+
+    if (!results.length) {
+        return;
+    }
+
+    copyText(results[0].code);
+}
+
+
+search.addEventListener(
+    "input",
+    render
+);
+
+
+search.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key === "Enter") {
+
+            event.preventDefault();
+
+            copyFirstResult();
+        }
+    }
+);
+
+
+list.addEventListener(
+    "click",
+    event => {
+
+        const button =
+            event.target.closest("[data-copy]");
+
+        if (!button) {
+            return;
+        }
+
+        const id =
+            button.dataset.copy;
+
+        const item =
+            snippets.find(
+                x => x.id === id
+            );
+
+        if (item) {
+            copyText(item.code);
+        }
+    }
+);
+
+
+const hash =
+    decodeURIComponent(
+        location.hash.slice(1)
+    );
+
+if (hash) {
+
+    search.value = hash;
+
+    render();
+
+} else {
+
+    render();
+}
+
+
+search.focus();
+
+</script>
+
+</body>
+</html>
